@@ -65,9 +65,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CImg.h" />
+    <ClInclude Include="ColourAnalyser.h" />
     <ClInclude Include="EdgeGenerator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ColourAnalyser.cpp" />
     <ClCompile Include="EdgeGenerator.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

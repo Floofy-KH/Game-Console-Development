@@ -1,7 +1,6 @@
-#include "CImg.h"
 #include "EdgeGenerator.h"
+#include "ColourAnalyser.h"
 #include <iostream>
-using namespace cimg_library;
 
 float obtainAspectRatio(CImg<int> image)
 {
