@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <math.h>
 #include <iostream>
+#include <utility>
+#include <vector>
 
 void EdgeGenerator::applyKernal(int * inData, int rowStride, int row, int col, int maxRows, int maxCols, int * outData, float * kernal, int kernalWidth, int kernalHeight)
 {
@@ -186,31 +188,48 @@ void EdgeGenerator::applyHysteresisTracking(int * inData, int width, int height,
 void EdgeGenerator::fillBoundaries(int * inData, int width, int height, int strongEdgeValue, int weakEdgeValue, int * outData)
 {
 	const int ignoreOffset = 10;
-	const int edgeFlipThreshold = 3;
-
+  std::vector<std::pair<int, int>> boundaries(height);
+  
 	for (int row = 0; row < height; ++row)
 	{
-		bool inside = false;
-		int numPixelsSinceFlip = 0;
+    bool firstEdgeFound = false;
 		for (int col = 0; col < width; ++col)
 		{
 			int i = col + row*width;
 			if (col > ignoreOffset && col < width - ignoreOffset && row > ignoreOffset && row < height - ignoreOffset)
 			{
-				if ((inData[i] == strongEdgeValue || inData[i] == weakEdgeValue) && numPixelsSinceFlip < edgeFlipThreshold)
-				{
-					inside = !inside;
-					numPixelsSinceFlip = 0;
-				}
-				else
-				{
-					numPixelsSinceFlip++;
-				}
+        if ((inData[i] == strongEdgeValue || inData[i] == weakEdgeValue))
+        {
+          if (!firstEdgeFound)
+          {
+            firstEdgeFound = true;
+            boundaries[row] = std::pair<int, int>(col, 0);
+          }
+          else
+          {
+            boundaries[row].second = col;
+          }
+        }
 			}
-
-			outData[i] = (inside) ? 255 : 0;
 		}
 	}
+
+  for (int row = 0; row < height; ++row)
+  {
+    std::pair<int, int> boundary = boundaries[row];
+    for (int col = 0; col < width; ++col)
+    {
+      int i = col + row*width;
+      if (boundary.second != 0 && col > boundary.first && col < boundary.second)
+      {
+        outData[i] = 255;
+      }
+      else
+      {
+        outData[i] = 0; 
+      }
+    }
+  }
 }
 
 void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowThreshold, int highThreshold, int * outData)
@@ -269,8 +288,8 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 	{
 		for (int col = 0; col<width; ++col)
 		{
-			applyKernal(guassianResult, width, row, col, height, width, sobelResultX, Gx, 3, 3);
-			applyKernal(guassianResult, width, row, col, height, width, sobelResultY, Gy, 3, 3);
+      applyKernal(guassianResult, width, row, col, height, width, sobelResultX, Gx, 3, 3);
+      applyKernal(guassianResult, width, row, col, height, width, sobelResultY, Gy, 3, 3);
 			int index = col + row*width;
 			sobelResult[index] = (int)sqrt(sobelResultX[index] * sobelResultX[index] + sobelResultY[index] * sobelResultY[index]);
 		}
@@ -292,9 +311,9 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 	applyHysteresisTracking(sobelResult, width, height, STRONG_EDGE_VALUE, hysteresisResult);
 	delete[] sobelResult;
 
-	/*std::cout << "Filling image boundaries...\n";
-	fillBoundaries(hysteresisResult, width, height, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE, boundaryResult);*/
+	std::cout << "Filling image boundaries...\n";
+	fillBoundaries(hysteresisResult, width, height, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE, boundaryResult);
 
-	memcpy(outData, hysteresisResult, imageSize * sizeof(int));
+  memcpy(outData, boundaryResult, imageSize * sizeof(int));
 	delete[] hysteresisResult;
 }

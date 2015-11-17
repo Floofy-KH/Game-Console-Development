@@ -3,6 +3,53 @@
 #include <iostream>
 using namespace cimg_library;
 
+float obtainAspectRatio(CImg<int> image)
+{
+  int startX = image.width();
+  int endX = 0;
+
+  int startY = image.height();
+  int endY = 0;
+
+  for (int x = 10; x < image.width() - 1; x++)
+  {
+    for (int y = 10; y < image.height() - 10; y++)
+    {
+      //Since the image should have only one channel, trial and error suggests that grayValue is the pixel value while green is the alpha.
+      int numchannels = image.spectrum();
+      int grayValue = (int)image(x, y, 0, 0);
+      //int greenValue = (int)image(x, y, 0, 1);
+
+      //Might be better to have nested if statements. Not done so that I could check the values though.
+      if (grayValue > 200 && x < startX)
+      {
+        startX = x;
+      }
+
+      if (grayValue > 200 && x > endX)
+      {
+        endX = x;
+      }
+
+      if (grayValue > 200 && y < startY)
+      {
+        startY = y;
+      }
+
+      if (grayValue > 200 && y > endY)
+      {
+        endY = y;
+      }
+    }
+  }
+
+  int appleWidth = endX - startX;
+  int appleHeight = endY - startY;
+  float aspectRatio = (float)appleHeight / (float)appleWidth;
+
+  return aspectRatio;
+}
+
 int main(int argc, char** argv)
 {
   int *edgeData = NULL;
@@ -20,4 +67,9 @@ int main(int argc, char** argv)
 
   std::cout << "Saving image...\n";
   image.save("processed.bmp");
+
+  float AR = obtainAspectRatio(image);
+
+  std::cout << "aspect ratio is  " << AR << std::endl;
+  std::cin.get();
 }
