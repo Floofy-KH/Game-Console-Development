@@ -313,7 +313,8 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 
 	std::cout << "Filling image boundaries...\n";
 	fillBoundaries(hysteresisResult, width, height, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE, boundaryResult);
+	delete[] hysteresisResult;
 
   memcpy(outData, boundaryResult, imageSize * sizeof(int));
-	delete[] hysteresisResult;
+	delete[] boundaryResult;
 }

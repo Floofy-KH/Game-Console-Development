@@ -54,21 +54,41 @@ int main(int argc, char** argv)
   int *edgeData = NULL;
   
   std::cout << "Loading image...\n";
-  CImg<int> image ("apple.bmp");
+  CImg<int> image ("apples/Cortland.bmp");
   std::cout << "Converting image to greyscale...\n";
-  image.channel(0);
-	edgeData = new int[image.size()];
-	EdgeGenerator::generateEdges(image.data(), image.width(), image.height(), 20, 40, edgeData);
+	CImg<int> greyscale = CImg<int>(image);
+	greyscale.channel(0);
+	edgeData = new int[greyscale.size()];
+	EdgeGenerator::generateEdges(greyscale.data(), greyscale.width(), greyscale.height(), 20, 40, edgeData);
+	
+	std::vector<int> redHist, greenHist, blueHist;
+	ColourAnalyser::getHistograms(image, redHist, greenHist, blueHist, edgeData);
 
-  std::cout << "Copying processed data for saving...\n";
-  memcpy(image.data(), edgeData, image.size() * sizeof(int));
+	std::cout << "Red Histogram Values" << std::endl;
+	int count = 0;
+	for (unsigned i = 0; i < redHist.size(); ++i)
+	{
+		std::cout << i << ": " << redHist[i] << std::endl;
+		count += redHist[i];
+	}
+	std::cout << "Total: " << count << std::endl;
+	float countMultiplier = 1 / (float)count;
+
+	for (unsigned i = 0; i < redHist.size(); ++i)
+	{
+		float levelled = redHist[i] * countMultiplier;
+		std::cout << i << ": " << levelled << std::endl;
+	}
+	std::cout << "Copying processed data for saving...\n";
+	memcpy(image.data(), edgeData, image.size() * sizeof(int));
 	delete[] edgeData;
+	std::cout << "Saving image...\n";
+	image.channel(0);
+	image.save("processed.bmp");
 
-  std::cout << "Saving image...\n";
-  image.save("processed.bmp");
+	float AR = obtainAspectRatio(greyscale);
+	std::cout << "aspect ratio is  " << AR << std::endl;
 
-  float AR = obtainAspectRatio(image);
-
-  std::cout << "aspect ratio is  " << AR << std::endl;
+	std::cout << "Press any key to continue" << std::endl;
   std::cin.get();
 }

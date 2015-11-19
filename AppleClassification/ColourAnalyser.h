@@ -7,8 +7,8 @@ class ColourAnalyser
 {
 public:
   ~ColourAnalyser(){};
-  std::vector<int> getHistogram(CImg<int> image, int channel, int *mask = nullptr);
-  void getHistograms(CImg<int> image, std::vector<int> &redHistogram, std::vector<int> &greenHistogram, std::vector<int> &blueHistogram, int *mask = nullptr);
+  static std::vector<int> getHistogram(CImg<int> image, int channel, int *mask = nullptr);
+	static void getHistograms(CImg<int> image, std::vector<int> &redHistogram, std::vector<int> &greenHistogram, std::vector<int> &blueHistogram, int *mask = nullptr);
 
 private:
   ColourAnalyser(){};
