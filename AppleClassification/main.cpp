@@ -63,22 +63,10 @@ int main(int argc, char** argv)
 	
 	std::vector<int> redHist, greenHist, blueHist;
 	ColourAnalyser::getHistograms(image, redHist, greenHist, blueHist, edgeData);
+  redHist = ColourAnalyser::normaliseHistogram(redHist);
+  greenHist = ColourAnalyser::normaliseHistogram(greenHist);
+  blueHist = ColourAnalyser::normaliseHistogram(blueHist);
 
-	std::cout << "Red Histogram Values" << std::endl;
-	int count = 0;
-	for (unsigned i = 0; i < redHist.size(); ++i)
-	{
-		std::cout << i << ": " << redHist[i] << std::endl;
-		count += redHist[i];
-	}
-	std::cout << "Total: " << count << std::endl;
-	float countMultiplier = 1 / (float)count;
-
-	for (unsigned i = 0; i < redHist.size(); ++i)
-	{
-		float levelled = redHist[i] * countMultiplier;
-		std::cout << i << ": " << levelled << std::endl;
-	}
 	std::cout << "Copying processed data for saving...\n";
 	memcpy(image.data(), edgeData, image.size() * sizeof(int));
 	delete[] edgeData;
