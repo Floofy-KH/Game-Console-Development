@@ -51,31 +51,24 @@ float obtainAspectRatio(CImg<int> image)
 
 int main(int argc, char** argv)
 {
-  int *edgeData = NULL;
+  int *edgeData1 = NULL, *edgeData2 = NULL;
   
-  std::cout << "Loading image...\n";
-  CImg<int> image ("apples/Cortland.bmp");
-  std::cout << "Converting image to greyscale...\n";
-	CImg<int> greyscale = CImg<int>(image);
-	greyscale.channel(0);
-	edgeData = new int[greyscale.size()];
-	EdgeGenerator::generateEdges(greyscale.data(), greyscale.width(), greyscale.height(), 20, 40, edgeData);
+  std::cout << "Loading images...\n";
+  CImg<int> image1 ("apples/Cortland.bmp");
+  CImg<int> image2 ("apples/Cortland.bmp");
+
+  std::cout << "Converting images to greyscale...\n";
+	CImg<int> greyscale1 = CImg<int>(image1);
+  CImg<int> greyscale2 = CImg<int>(image2);
+	greyscale1.channel(0);
+  greyscale2.channel(0);
+	edgeData1 = new int[greyscale1.size()];
+  edgeData2 = new int[greyscale2.size()];
+	EdgeGenerator::generateEdges(greyscale1.data(), greyscale1.width(), greyscale1.height(), 20, 40, edgeData1);
+  EdgeGenerator::generateEdges(greyscale2.data(), greyscale2.width(), greyscale2.height(), 20, 40, edgeData2);
 	
-	std::vector<int> redHist, greenHist, blueHist;
-	ColourAnalyser::getHistograms(image, redHist, greenHist, blueHist, edgeData);
-  redHist = ColourAnalyser::normaliseHistogram(redHist);
-  greenHist = ColourAnalyser::normaliseHistogram(greenHist);
-  blueHist = ColourAnalyser::normaliseHistogram(blueHist);
-
-	std::cout << "Copying processed data for saving...\n";
-	memcpy(image.data(), edgeData, image.size() * sizeof(int));
-	delete[] edgeData;
-	std::cout << "Saving image...\n";
-	image.channel(0);
-	image.save("processed.bmp");
-
-	float AR = obtainAspectRatio(greyscale);
-	std::cout << "aspect ratio is  " << AR << std::endl;
+  int EMD = ColourAnalyser::compareImages(image1, image2, edgeData1, edgeData2);
+  std::cout << "EMD is: " << EMD << std::endl;
 
 	std::cout << "Press any key to continue" << std::endl;
   std::cin.get();
