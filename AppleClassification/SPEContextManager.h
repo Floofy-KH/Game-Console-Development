@@ -12,6 +12,7 @@ public:
   bool destroyContext(spe_context_ptr_t context);
   bool loadProgramHandle(spe_context_ptr_t target, spe_program_handle_t *handle);
   bool runSPEContext(spe_context_ptr_t, spe_stop_info*);
+  bool runSPEContext(spe_context_ptr_t, spe_stop_info*, void *argp);
   bool runSPEContext(spe_context_ptr_t, spe_stop_info*, unsigned int *entry, unsigned int runflags, void *argp, void *envp);
 
   ~SPEContextManager();

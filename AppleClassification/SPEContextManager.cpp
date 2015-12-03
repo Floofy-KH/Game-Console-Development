@@ -71,13 +71,18 @@ bool SPEContextManager::loadProgramHandle(spe_context* target, spe_program_handl
   return false;
 }
 
-bool SPEContextManager::runSPEContext(spe_context *context, spe_stop_info *stopInfo)
+bool SPEContextManager::runSPEContext(spe_context_ptr_t context, spe_stop_info *stopInfo)
 {
-  unsigned int entry = SPE_DEFAULT_ENTRY;
-  return  runSPEContext(context, stopInfo, &entry, 0, NULL, NULL);
+  return  runSPEContext(context, stopInfo, NULL);
 }
 
-bool SPEContextManager::runSPEContext(spe_context *context, spe_stop_info *stopinfo, unsigned int * entry, unsigned int runflags, void * argp, void * envp)
+bool SPEContextManager::runSPEContext(spe_context_ptr_t context, spe_stop_info* stopInfo, void *argp)
+{
+  unsigned int entry = SPE_DEFAULT_ENTRY;
+  return  runSPEContext(context, stopInfo, &entry, 0, argp, NULL);
+}
+
+bool SPEContextManager::runSPEContext(spe_context_ptr_t context, spe_stop_info *stopinfo, unsigned int * entry, unsigned int runflags, void * argp, void * envp)
 {
   if (spe_context_run(context, entry, runflags, argp, envp, stopinfo) == 0)
   {

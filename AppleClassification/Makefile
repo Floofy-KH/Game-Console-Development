@@ -1,11 +1,13 @@
 # Subdirectories
-DIRS := spu
+DIRS := SPECode
 # Target
 PROGRAM_ppu := AppleClassification_prog 
 # Include
 INCLUDE := CImg.h FastEMD/emd_hat_signatures_interface.hpp
 # Don't optimise code
 CC_OPT_LEVEL = -O0
+# Imports
+IMPORTS := SPECode/lib_AddNumbersSPE.a -lspe2
 # Local Defines
 INSTALL_DIR = ~/AppleClassification/install/
 INSTALL_FILES = $(PROGRAM_ppu)

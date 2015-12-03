@@ -50,6 +50,12 @@ float obtainAspectRatio(CImg<int> image)
   return aspectRatio;
 }
 
+struct stuff
+{
+  int numbers[12];
+  int sum;
+};
+
 int main(int argc, char** argv)
 {
   spe_context_ptr_t context;
@@ -57,20 +63,34 @@ int main(int argc, char** argv)
   spe_stop_info_t stopInfo;
   SPEContextManager speManager;
   speManager.initialise();
-  speImage = speManager.getSPEImage("SPECode/HelloWorld_SPE");
+  speImage = speManager.getSPEImage("SPECode/AddNumbersSPE");
   context = speManager.createContext();
-  if (speManager.loadProgramHandle(context, speImage))
-  {
-    speManager.runSPEContext(context, &stopInfo);
-  }
-  speManager.closeSPEImage(speImage);
-  speManager.destroyContext(context);
 
   int *edgeData1 = NULL, *edgeData2 = NULL;
+
+  stuff thing __attribute__ ((aligned(128)));
+  thing.numbers  = { 1,2,3,4,5,6,7,8,9,10,11,12 };
   
   std::cout << "Loading images...\n";
   CImg<int> image1 ("apples/Cortland.bmp");
   CImg<int> image2 ("apples/Cortland.bmp");
+
+  if (speManager.loadProgramHandle(context, speImage))
+  {
+    speManager.runSPEContext(context, &stopInfo, numbers);
+  }
+  speManager.closeSPEImage(speImage);
+  speManager.destroyContext(context);
+
+  for (int i = 0; i < 12; ++i)
+  {
+    std::cout << numbers[i];
+    if (i != 11)
+    {
+      std::cout << " + ";
+    }
+  }
+  std::cout << " = " << numbers[12];
 
   std::cout << "Converting images to greyscale...\n";
 	CImg<int> greyscale1 = CImg<int>(image1);

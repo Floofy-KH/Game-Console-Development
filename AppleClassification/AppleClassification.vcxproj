@@ -72,8 +72,9 @@
   <ItemGroup>
     <ClCompile Include="ColourAnalyser.cpp" />
     <ClCompile Include="EdgeGenerator.cpp" />
-    <ClCompile Include="HelloWorld_SPE.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SPECode\AddNumbersSPE.cpp" />
+    <ClCompile Include="SPECode\HelloWorld_SPE.cpp" />
     <ClCompile Include="SPEContextManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

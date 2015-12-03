@@ -41,11 +41,14 @@
     <ClCompile Include="ColourAnalyser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HelloWorld_SPE.cpp">
-      <Filter>SPECode</Filter>
-    </ClCompile>
     <ClCompile Include="SPEContextManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SPECode\HelloWorld_SPE.cpp">
+      <Filter>SPECode</Filter>
+    </ClCompile>
+    <ClCompile Include="SPECode\AddNumbersSPE.cpp">
+      <Filter>SPECode</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
