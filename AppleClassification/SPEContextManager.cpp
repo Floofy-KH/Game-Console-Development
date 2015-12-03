@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-SPEContextManager::SPEContextManager()
+SPEContextManager::SPEContextManager() : m_numPhysicalNodes(-1), m_numPhysicalSPEs(-1), m_numUsableSPEs(-1)
 {
 }
 

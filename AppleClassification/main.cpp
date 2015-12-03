@@ -53,11 +53,11 @@ float obtainAspectRatio(CImg<int> image)
 int main(int argc, char** argv)
 {
   spe_context_ptr_t context;
-  spe_program_handle_t speImage;
+  spe_program_handle_t *speImage;
   spe_stop_info_t stopInfo;
   SPEContextManager speManager;
   speManager.initialise();
-  speImage = speManager.getSPEImage("HelloWord_SPE");
+  speImage = speManager.getSPEImage("SPECode/HelloWorld_SPE");
   context = speManager.createContext();
   if (speManager.loadProgramHandle(context, speImage))
   {
