@@ -67,11 +67,14 @@
     <ClInclude Include="CImg.h" />
     <ClInclude Include="ColourAnalyser.h" />
     <ClInclude Include="EdgeGenerator.h" />
+    <ClInclude Include="SPEContextManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ColourAnalyser.cpp" />
     <ClCompile Include="EdgeGenerator.cpp" />
+    <ClCompile Include="HelloWorld_SPE.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SPEContextManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

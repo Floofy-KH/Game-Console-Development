@@ -1,5 +1,6 @@
 #include "EdgeGenerator.h"
 #include "ColourAnalyser.h"
+#include "SPEContextManager.h"
 #include <iostream>
 
 float obtainAspectRatio(CImg<int> image)
@@ -51,6 +52,20 @@ float obtainAspectRatio(CImg<int> image)
 
 int main(int argc, char** argv)
 {
+  spe_context_ptr_t context;
+  spe_program_handle_t speImage;
+  spe_stop_info_t stopInfo;
+  SPEContextManager speManager;
+  speManager.initialise();
+  speImage = speManager.getSPEImage("HelloWord_SPE");
+  context = speManager.createContext();
+  if (speManager.loadProgramHandle(context, speImage))
+  {
+    speManager.runSPEContext(context, &stopInfo);
+  }
+  speManager.closeSPEImage(speImage);
+  speManager.destroyContext(context);
+
   int *edgeData1 = NULL, *edgeData2 = NULL;
   
   std::cout << "Loading images...\n";
