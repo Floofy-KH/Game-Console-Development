@@ -3,8 +3,9 @@
 #include <algorithm>
 #include <assert.h>
 #include <functional>
+#include <iostream>
 
-signature_tt<int> *currentSig1 = nullptr, *currentSig2 = nullptr;
+signature_tt<int> *currentSig1 = NULL, *currentSig2 = NULL;
 
 int getCost(feature_tt *F1, feature_tt *F2)
 {
@@ -40,37 +41,6 @@ void ColourAnalyser::calculateSignatures(signature_tt<int> &sig1, signature_tt<i
   //-----------------------------------------------
 }
 
-//This code is taken from the examples of the FastEDM library and is copyright to Ofir Pele.
-Vector2D ColourAnalyser::generateCostMatrix(int width, int height)
-{
-  Vector2D costMatrix;
-  const int COST_MULT_FACTOR = 1000;
-  const int THRESHOLD = 3 * COST_MULT_FACTOR;//1.412*COST_MULT_FACTOR;
-  // The ground distance - thresholded Euclidean distance.
-  // Since everything is ints, we multiply by COST_MULT_FACTOR.
-  // std::vector< std::vector<int> > cost_mat; // here it's defined as global for Rubner's interfaces.
-  // If you do not use Rubner's interface it's a better idea
-  // not to use globals.
-  std::vector<int> cost_mat_row(height*width);
-  for (int i = 0; i<height*width; ++i) costMatrix.push_back(cost_mat_row);
-  int max_cost_mat = -1;
-  int j = -1;
-  for (int c1 = 0; c1<width; ++c1) {
-    for (int r1 = 0; r1<height; ++r1) {
-      ++j;
-      int i = -1;
-      for (int c2 = 0; c2<width; ++c2) {
-        for (int r2 = 0; r2<height; ++r2) {
-          ++i;
-          costMatrix[i][j] = std::min(THRESHOLD, static_cast<int>(COST_MULT_FACTOR*sqrt((r1 - r2)*(r1 - r2) + (c1 - c2)*(c1 - c2))));
-        }
-      }
-    }
-  }
-
-  return costMatrix;
-}
-
 int ColourAnalyser::getEMD(signature_tt<int> sig1, signature_tt<int> sig2)
 {
   currentSig1 = &sig1;
@@ -91,7 +61,7 @@ std::vector<int> ColourAnalyser::getHistogram(CImg<int> image, int channel, int 
     {
       int index = x + y*image.width();
       //If the mask isn't provided or if the value in the mask isn't black, add the pixel to the histogram. 
-      if (mask == nullptr || (mask != nullptr && mask[index] != 0))
+      if (mask == NULL|| (mask != NULL && mask[index] != 0))
       {
         int &value = image(x, y, 0, channel);
         histogram[value]++;
@@ -116,7 +86,7 @@ void ColourAnalyser::getHistograms(CImg<int> image, std::vector<int> &redHistogr
     {
       int index = x + y*image.width();
       //If the mask isn't provided or if the value in the mask isn't black, add the pixels to the histograms. 
-      if (mask == nullptr || (mask != nullptr && mask[index] != 0))
+      if (mask == NULL || (mask != NULL && mask[index] != 0))
       {
         int &value = image(x, y, 0, 0);
         redHistogram[value]++;
@@ -144,12 +114,14 @@ const std::vector<int> ColourAnalyser::normaliseHistogram(const std::vector<int>
 //Returns an averaged EMD value for the 2 images provided. 
 const int ColourAnalyser::compareImages(CImg<int> image1, CImg<int> image2, int *mask1, int *mask2)
 {
+  std::cout << "Generating histograms for images..." << std::endl;
   std::vector<int> red1, red2, green1, green2, blue1, blue2;
   //Get the histograms for each image
   getHistograms(image1, red1, green1, blue1, mask1);
   getHistograms(image2, red2, green2, blue2, mask2);
 
   //Normalise all the histograms
+  std::cout << "Normalising histograms..." << std::endl;
   red1 = normaliseHistogram(red1);
   red2 = normaliseHistogram(red2);
   green1 = normaliseHistogram(green1);
@@ -157,20 +129,22 @@ const int ColourAnalyser::compareImages(CImg<int> image1, CImg<int> image2, int 
   blue1 = normaliseHistogram(blue1);
   blue2 = normaliseHistogram(blue2);
 
-  //Generate the cost matrix used in the EMD calculation. 
-  //Vector2D costMatrix = generateCostMatrix(image1.width(), image2.height());
-
   //Create the signatures from the histograms.
+  std::cout << "Creating signatures from histograms..." << std::endl;
   signature_tt<int> redSig1, redSig2, greenSig1, greenSig2, blueSig1, blueSig2;
   calculateSignatures(redSig1, redSig2, red1, red2);
   calculateSignatures(greenSig1, greenSig2, green1, green2);
   calculateSignatures(blueSig1, blueSig2, blue1, blue2);
 
   //Calculate the EMD for each colour
+  std::cout << "Calculating EDM for red..." << std::endl;
   int redEMD = getEMD(redSig1, redSig2);
+  std::cout << "Calculating EDM for green..." << std::endl;
   int greenEMD = getEMD(greenSig1, greenSig2);
+  std::cout << "Calculating EDM for blue..." << std::endl;
   int blueEMD = getEMD(blueSig1, blueSig2);
 
   //Average the three values to get an average EMD for the image and return it
+  std::cout << "Averaging EDM..." << std::endl;
   return (redEMD + greenEMD + blueEMD) / 3;
 }

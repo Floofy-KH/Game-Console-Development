@@ -188,7 +188,7 @@ void EdgeGenerator::applyHysteresisTracking(int * inData, int width, int height,
 void EdgeGenerator::fillBoundaries(int * inData, int width, int height, int strongEdgeValue, int weakEdgeValue, int * outData)
 {
 	const int ignoreOffset = 10;
-  std::vector<std::pair<int, int>> boundaries(height);
+  std::vector< std::pair<int, int> > boundaries(height);
   
 	for (int row = 0; row < height; ++row)
 	{
