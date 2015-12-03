@@ -52,7 +52,7 @@ float obtainAspectRatio(CImg<int> image)
 
 struct stuff
 {
-  int numbers[12];
+  int numbers[31];
   int sum;
 };
 
@@ -68,8 +68,12 @@ int main(int argc, char** argv)
 
   int *edgeData1 = NULL, *edgeData2 = NULL;
 
-  stuff thing __attribute__ ((aligned(128)));
-  thing.numbers  = { 1,2,3,4,5,6,7,8,9,10,11,12 };
+  static stuff thing __attribute__ ((aligned(128)));
+  
+  for(int i=0; i<31; i++)
+  { 
+    thing.numbers[i] = i+1;
+  } 
   
   std::cout << "Loading images...\n";
   CImg<int> image1 ("apples/Cortland.bmp");
@@ -77,20 +81,20 @@ int main(int argc, char** argv)
 
   if (speManager.loadProgramHandle(context, speImage))
   {
-    speManager.runSPEContext(context, &stopInfo, numbers);
+    speManager.runSPEContext(context, &stopInfo, &thing);
   }
   speManager.closeSPEImage(speImage);
   speManager.destroyContext(context);
 
-  for (int i = 0; i < 12; ++i)
+  for (int i = 0; i < 31; ++i)
   {
-    std::cout << numbers[i];
-    if (i != 11)
+    std::cout << thing.numbers[i];
+    if (i != 30)
     {
       std::cout << " + ";
     }
   }
-  std::cout << " = " << numbers[12];
+  std::cout << " = " << thing.sum << std::endl;
 
   std::cout << "Converting images to greyscale...\n";
 	CImg<int> greyscale1 = CImg<int>(image1);
