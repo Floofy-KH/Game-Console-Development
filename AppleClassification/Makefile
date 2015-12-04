@@ -8,7 +8,7 @@ INCLUDE := CImg.h FastEMD/emd_hat_signatures_interface.hpp
 #CC_OPT_LEVEL = -O0
 CC_OPT_LEVEL = -g
 # Imports
-IMPORTS := SPECode/lib_AddNumbersSPE.a -lspe2
+IMPORTS := SPECode/lib_ApplyThresholding.a -lspe2
 # Local Defines
 INSTALL_DIR = ~/AppleClassification/install/
 INSTALL_FILES = $(PROGRAM_ppu)

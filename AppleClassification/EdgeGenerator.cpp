@@ -1,4 +1,5 @@
 #include "EdgeGenerator.h"
+#include "SPEContextManager.h"
 #include <assert.h>
 #include <math.h>
 #include <iostream>
@@ -133,7 +134,28 @@ void EdgeGenerator::performNonMaximumSuppression(int * data, float * directions,
 
 void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, int highThreshold, int strongEdgeValue, int weakEdgeValue)
 {
-	for (int i = 0; i < size; ++i)
+  spe_context_ptr_t context;
+  spe_program_handle_t *speImage;
+  spe_stop_info_t stopInfo;
+  unsigned int entry = SPE_DEFAULT_ENTRY;
+  SPEContextManager speManager;
+  speManager.initialise();
+  speImage = speManager.getSPEImage("SPECode/ApplyThresholding");
+  context = speManager.createContext();
+
+  static int argumentData[16] = {
+    (int)data, size, lowThreshold, highThreshold, strongEdgeValue, weakEdgeValue,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  } __attribute__((aligned(64)));
+
+  if (speManager.loadProgramHandle(context, speImage))
+  {
+    speManager.runSPEContext(context, &stopInfo, &entry, SPE_RUN_USER_REGS, &argumentData, 0);
+  }
+  speManager.closeSPEImage(speImage);
+  speManager.destroyContext(context);
+
+	/*for (int i = 0; i < size; ++i)
 	{
 		if (data[i] > highThreshold)
 		{
@@ -147,7 +169,7 @@ void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, in
 		{
 			data[i] = weakEdgeValue;
 		}
-	}
+	}*/
 }
 
 void EdgeGenerator::applyHysteresisTracking(int * inData, int width, int height, int strongEdgeValue, int * outData)

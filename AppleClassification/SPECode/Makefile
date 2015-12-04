@@ -1,6 +1,6 @@
 #Target
-PROGRAMS_spu := AddNumbersSPE
-LIBRARY_embed := lib_AddNumbersSPE.a
+PROGRAMS_spu := ApplyThresholding 
+LIBRARY_embed := lib_ApplyThresholding.a
 CC_OPT_LEVEL = -g -O0
 
 #buildutils/make.footer

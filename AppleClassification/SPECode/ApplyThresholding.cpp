@@ -2,14 +2,16 @@
 
 #define MAX_SIZE 4096
 
-int main(unsigned long long arg1, unsigned long long arg2, unsigned long long arg3)
+int main(vector unsigned long long arg1,
+vector unsigned long long arg2, 
+vector unsigned long long arg3)
 {
-  int dataAddress = (vector int)arg1)[0];
-  int size = (vector int)arg1)[1];
-  int lowThreshold = (vector int)arg1)[2];
-  int highThreshold = (vector int)arg1)[3];
-  int strongEdgeValue = (vector int)arg2)[0];
-  int weakEdgeValue = (vector int)arg2)[0];
+  int dataAddress = ((vector signed int)arg1)[0];
+  int size = ((vector signed int)arg1)[1];
+  int lowThreshold = ((vector signed int)arg1)[2];
+  int highThreshold = ((vector signed int)arg1)[3];
+  int strongEdgeValue = ((vector signed int)arg2)[0];
+  int weakEdgeValue = ((vector signed int)arg2)[0];
 
   int dataBuffer[4096*2] __attribute__((aligned(128)));
   int blockSize = sizeof(dataBuffer) / 2;
@@ -100,3 +102,4 @@ int main(unsigned long long arg1, unsigned long long arg2, unsigned long long ar
 
   return 0;
 }
+
