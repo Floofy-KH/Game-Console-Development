@@ -74,6 +74,8 @@
     <ClCompile Include="EdgeGenerator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SPECode\AddNumbersSPE.cpp" />
+    <ClCompile Include="SPECode\ApplyKernal64x64.cpp" />
+    <ClCompile Include="SPECode\ApplyThresholding.cpp" />
     <ClCompile Include="SPECode\HelloWorld_SPE.cpp" />
     <ClCompile Include="SPEContextManager.cpp" />
   </ItemGroup>

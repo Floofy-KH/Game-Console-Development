@@ -50,5 +50,11 @@
     <ClCompile Include="SPECode\AddNumbersSPE.cpp">
       <Filter>SPECode</Filter>
     </ClCompile>
+    <ClCompile Include="SPECode\ApplyKernal64x64.cpp">
+      <Filter>SPECode</Filter>
+    </ClCompile>
+    <ClCompile Include="SPECode\ApplyThresholding.cpp">
+      <Filter>SPECode</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
