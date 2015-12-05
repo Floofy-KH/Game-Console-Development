@@ -142,11 +142,13 @@ void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, in
   speManager.initialise();
   speImage = speManager.getSPEImage("SPECode/ApplyThresholding");
   context = speManager.createContext();
-
-  static int argumentData[16] = {
-    (int)data, size, lowThreshold, highThreshold, strongEdgeValue, weakEdgeValue,
+ 
+  int alignedData[size] __attribute__((aligned(128)));
+  memcpy(alignedData, data, size); 
+  static unsigned int argumentData[16] __attribute__((aligned(16))) = {
+    size, (unsigned int)alignedData,  lowThreshold, highThreshold, strongEdgeValue, weakEdgeValue,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-  } __attribute__((aligned(64)));
+  };
 
   if (speManager.loadProgramHandle(context, speImage))
   {
