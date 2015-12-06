@@ -58,43 +58,11 @@ struct stuff
 
 int main(int argc, char** argv)
 {
-  spe_context_ptr_t context;
-  spe_program_handle_t *speImage;
-  spe_stop_info_t stopInfo;
-  SPEContextManager speManager;
-  speManager.initialise();
-  speImage = speManager.getSPEImage("SPECode/AddNumbersSPE");
-  context = speManager.createContext();
-
   int *edgeData1 = NULL, *edgeData2 = NULL;
 
-  static stuff thing __attribute__ ((aligned(128)));
-  
-  for(int i=0; i<31; i++)
-  { 
-    thing.numbers[i] = i+1;
-  } 
-  
   std::cout << "Loading images...\n";
   CImg<int> image1 ("apples/Cortland.bmp");
-  CImg<int> image2 ("apples/Cortland.bmp");
-
-  if (speManager.loadProgramHandle(context, speImage))
-  {
-    speManager.runSPEContext(context, &stopInfo, &thing);
-  }
-  speManager.closeSPEImage(speImage);
-  speManager.destroyContext(context);
-
-  for (int i = 0; i < 31; ++i)
-  {
-    std::cout << thing.numbers[i];
-    if (i != 30)
-    {
-      std::cout << " + ";
-    }
-  }
-  std::cout << " = " << thing.sum << std::endl;
+  CImg<int> image2 ("apples/Golden Delicious.bmp");
 
   std::cout << "Converting images to greyscale...\n";
 	CImg<int> greyscale1 = CImg<int>(image1);

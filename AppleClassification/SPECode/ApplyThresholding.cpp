@@ -3,7 +3,7 @@
 #include <math.h>
 
 #define MAX_SIZE 4096 
-#define LOGGING 1
+#define LOGGING 0
 
 #if LOGGING
   #define DPRINTF printf
@@ -64,12 +64,12 @@ vector unsigned int arg3)
         }
       }
       DPRINTF("Sending processed datablock back to main memory with tag %d\n", 1-(i&1));
-      mfc_put(dataBuffer + start/*(1 - (i & 1))*MAX_SIZE*/, dataAddress + (i - 1)*blockSize, blockSize, 1 - (i & 1), 0, 0);
+      mfc_put(dataBuffer + start, dataAddress + (i - 1)*blockSize, blockSize, 1 - (i & 1), 0, 0);
     }
     DPRINTF("Waiting for last data transfer to complete\n");
     mfc_write_tag_mask(2);
     mfc_read_tag_status_all();
-    DPRINTF("Last data transfer complete, doing final thresholding for complete block.\n");
+    DPRINTF("Last data transfer complete, doing final thresholding.\n");
     start = ((iterations)&1) ? 0 : MAX_SIZE;
     end = start + MAX_SIZE;
     for (int j = start; j < end; ++j)
