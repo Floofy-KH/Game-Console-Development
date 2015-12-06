@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#define TRANSFER_CHUNK_SIZE 4096
+
 void EdgeGenerator::applyKernal(int * inData, int rowStride, int row, int col, int maxRows, int maxCols, int * outData, float * kernal, int kernalWidth, int kernalHeight)
 {
 	assert(kernalWidth % 2 != 0);
@@ -143,9 +145,12 @@ void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, in
   speImage = speManager.getSPEImage("SPECode/ApplyThresholding");
   context = speManager.createContext();
  
-  int alignedData[size] __attribute__((aligned(128)));
+  const int padding = TRANSFER_CHUNK_SIZE - (size%TRANSFER_CHUNK_SIZE);
+  const int paddedDataSize = size + padding; 
+  int alignedData[paddedDataSize] __attribute__((aligned(128)));
   memcpy(alignedData, data, size); 
-  static unsigned int argumentData[16] __attribute__((aligned(16))) = {
+  memset(alignedData+size, 0, padding);
+  static unsigned int argumentData[16] __attribute__((aligned(128))) = {
     size, (unsigned int)alignedData,  lowThreshold, highThreshold, strongEdgeValue, weakEdgeValue,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   };
@@ -156,6 +161,8 @@ void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, in
   }
   speManager.closeSPEImage(speImage);
   speManager.destroyContext(context);
+
+  memcpy(data, alignedData, size);
 
 	/*for (int i = 0; i < size; ++i)
 	{
