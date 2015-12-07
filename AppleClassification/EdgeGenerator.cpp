@@ -274,10 +274,14 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 	const int STRONG_EDGE_VALUE = 255;
 	const int WEAK_EDGE_VALUE = 100;
 
-	float Gx[] = { 1, 2, 1, 0, 0, 0, -1, -2, -1 };
-	float Gy[] = { 1, 0, -1, 2, 0, -2, 1, 0, -1 };
+	float Gx[]__attribute__((aligned(128))) = { 1, 2, 1, 0, 0, 0, -1, -2, -1, 
+ //Padding
+ 0, 0, 0, 0, 0, 0, 0 };
+	float Gy[]__attribute__((aligned(128))) = { 1, 0, -1, 2, 0, -2, 1, 0, -1, 
+ //Padding
+ 0, 0, 0, 0, 0, 0, 0 };
 
-	float GaussianBlur[] =
+	float GaussianBlur[]__attribute__((aligned(4))) =
 	{
 		2, 4, 5, 4, 2,
 		4, 9, 12, 9, 4,
@@ -291,22 +295,14 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 		GaussianBlur[i] *= blurThingy;
 	}
 
-	int *guassianResult = NULL;
-	int *sobelResultX = NULL;
-	int *sobelResultY = NULL;
-	int *sobelResult = NULL;
-	int *hysteresisResult = NULL;
-	int *boundaryResult = NULL;
-	float *directions = NULL;
 	int imageSize = width*height;
-	
-	guassianResult = new int[imageSize];
-	sobelResult = new int[imageSize];
-	sobelResultX = new int[imageSize];
-	sobelResultY = new int[imageSize];
-	hysteresisResult = new int[imageSize];
-	boundaryResult = new int[imageSize];
-	directions = new float[imageSize];
+	int sobelResultX [imageSize]__attribute__((aligned(128)));
+	int sobelResultY [imageSize]__attribute__((aligned(128)));
+	int sobelResult [imageSize]__attribute__((aligned(128)));
+	int guassianResult [imageSize]__attribute__((aligned(128)));
+	int hysteresisResult [imageSize]__attribute__((aligned(128)));
+	int boundaryResult [imageSize]__attribute__((aligned(128)));
+	int directions [imageSize]__attribute__((aligned(128)));
 
 	std::cout << "Applying Gaussian filter...\n";
 	for (int i = 0; i < 1; ++i)
@@ -320,7 +316,7 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 		}
 	}
   
-  unsigned int argumentData[16] __attribute__((aligned(128))) =
+    unsigned int argumentData[16] __attribute__((aligned(128))) =
   {
     (unsigned int)guassianResult, (unsigned int)sobelResultX, width, height, (unsigned int)Gx, 3, 
     0,0,0,0,0,0,0,0,0,0
@@ -346,25 +342,18 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 	}
 
 	std::cout << "Calculating edge directions...\n";
-	calculateEdgeDirections(sobelResultX, sobelResultY, directions, imageSize);
-	delete[] sobelResultX;
-	delete[] sobelResultY;
-
+	calculateEdgeDirections((int*)sobelResultX, (int*)sobelResultY, (float*)directions, imageSize);
 	std::cout << "Performing non-maximum suppression...\n";
-	performNonMaximumSuppression(sobelResult, directions, width, height);
-	delete[] directions;
+	performNonMaximumSuppression((int*)sobelResult, (float*)directions, width, height);
 
 	std::cout << "Applying double thresholding...\n";
-	applyThresholding(sobelResult, imageSize, lowThreshold, highThreshold, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE);
+	applyThresholding((int*)sobelResult, imageSize, lowThreshold, highThreshold, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE);
 
 	std::cout << "Performing edge tracking with hysteresis...\n";
-	applyHysteresisTracking(sobelResult, width, height, STRONG_EDGE_VALUE, hysteresisResult);
-	delete[] sobelResult;
+	applyHysteresisTracking((int*)sobelResult, width, height, STRONG_EDGE_VALUE, (int*)hysteresisResult);
 
 	std::cout << "Filling image boundaries...\n";
-	fillBoundaries(hysteresisResult, width, height, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE, boundaryResult);
-	delete[] hysteresisResult;
+	fillBoundaries((int*)hysteresisResult, width, height, STRONG_EDGE_VALUE, WEAK_EDGE_VALUE, (int*)boundaryResult);
 
   memcpy(outData, boundaryResult, imageSize * sizeof(int));
-	delete[] boundaryResult;
 }

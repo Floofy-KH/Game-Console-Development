@@ -18,7 +18,7 @@
 unsigned int inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize, size;
 mfc_list_element_t getElements[CHUNK_SIZE], putElements[CHUNK_SIZE];
 int inData[MAX_SIZE * 2] __attribute__((aligned(128))), outData[MAX_SIZE * 2] __attribute__((aligned(128)));
-float *kernal;
+float kernal[32] __attribute__((aligned(128)));//If a kernal larger than 32 is used this will need changed. 
 
 inline bool putChunk(int chunkIndex)
 {
@@ -100,15 +100,15 @@ inline bool getChunk(int chunkIndex)
 
   if (validChunk)
   {
-    DPRINTF("Getting %dth data chunk\n", chunkIndex);
+    DPRINTF("Getting %dth data chunk at {%d; %d}\n", chunkIndex, col, row);
     for (unsigned int i = 0; i<CHUNK_SIZE; ++i)
     {
-      getElements[i].size = CHUNK_SIZE;
-      getElements[i].eal = inDataAddress + col + (row + i)*width;
+      getElements[i].size = CHUNK_SIZE * sizeof(int);
+      getElements[i].eal = inDataAddress + (col + (row + i)*width)*sizeof(int);
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_getl(inData, inDataAddress + bufferPos*MAX_SIZE, getElements, sizeof(getElements), bufferPos, 0, 0);
+    mfc_getl(inData, mfc_hl2ea(0, inDataAddress + bufferPos*MAX_SIZE), getElements, sizeof(getElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -156,13 +156,10 @@ int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int
   size = width*height;
   DPRINTF("In data: %u\nOut data: %u\nWidth: %u\nHeight: %u\nKernal: %u\nKernal size: %u\n", inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize);
 
-  mfc_list_element_t getElements[CHUNK_SIZE], putElements[CHUNK_SIZE];
-  int inData[MAX_SIZE*2] __attribute__((aligned(128))), outData[MAX_SIZE*2] __attribute__((aligned(128)));
-  float kernalArray[kernalSize*kernalSize] __attribute__((aligned(128)));
-  kernal = kernalArray;
-
   DPRINTF("Getting kernal data\n");
-  mfc_get(kernal, kernalAddress, kernalSize*kernalSize, KERNAL_TAG, 0, 0);
+  int totalKernalSize = kernalSize*kernalSize;
+  int kernalPaddedSize = totalKernalSize + (16 - (totalKernalSize%16));
+  mfc_get(kernal, kernalAddress, kernalPaddedSize, KERNAL_TAG, 0, 0);
 
   DPRINTF("Geting first data chunk\n");
   int chunkIndex = 0;
