@@ -5,8 +5,39 @@
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <pthread.h>
+#include <functional>
 
 #define TRANSFER_CHUNK_SIZE 4096
+
+struct ThreadData
+{
+  void *data;
+  char *speExecutable;
+  int runFlags;
+};
+
+void* threadFunc(void *data)
+{
+  ThreadData *threadData = (ThreadData*)data;
+  spe_context_ptr_t context;
+  spe_program_handle_t *speImage;
+  spe_stop_info_t stopInfo;
+  unsigned int entry = SPE_DEFAULT_ENTRY;
+  SPEContextManager speManager;
+  speManager.initialise();
+  speImage = speManager.getSPEImage(threadData->speExecutable);
+  context = speManager.createContext();
+
+  if(speManager.loadProgramHandle(context, speImage))
+  {
+    speManager.runSPEContext(context, &stopInfo, &entry, threadData->runFlags, threadData->data, 0);
+  }
+
+  speManager.closeSPEImage(speImage);
+  speManager.destroyContext(context);
+  pthread_exit(NULL);
+}
 
 void EdgeGenerator::applyKernal(int * inData, int rowStride, int row, int col, int maxRows, int maxCols, int * outData, float * kernal, int kernalWidth, int kernalHeight)
 {
@@ -136,15 +167,6 @@ void EdgeGenerator::performNonMaximumSuppression(int * data, float * directions,
 
 void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, int highThreshold, int strongEdgeValue, int weakEdgeValue)
 {
-  spe_context_ptr_t context;
-  spe_program_handle_t *speImage;
-  spe_stop_info_t stopInfo;
-  unsigned int entry = SPE_DEFAULT_ENTRY;
-  SPEContextManager speManager;
-  speManager.initialise();
-  speImage = speManager.getSPEImage("SPECode/ApplyThresholding");
-  context = speManager.createContext();
- 
   const int padding = TRANSFER_CHUNK_SIZE - (size%TRANSFER_CHUNK_SIZE);
   const int paddedDataSize = size + padding; 
   int alignedData[paddedDataSize] __attribute__((aligned(128)));
@@ -155,30 +177,14 @@ void EdgeGenerator::applyThresholding(int * data, int size, int lowThreshold, in
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   };
 
-  if (speManager.loadProgramHandle(context, speImage))
-  {
-    speManager.runSPEContext(context, &stopInfo, &entry, SPE_RUN_USER_REGS, &argumentData, 0);
-  }
-  speManager.closeSPEImage(speImage);
-  speManager.destroyContext(context);
-
+  ThreadData threadData;
+  threadData.data = argumentData;
+  threadData.speExecutable = "SPECode/ApplyThresholding";
+  threadData.runFlags = SPE_RUN_USER_REGS;
+  pthread_t pthread;
+  pthread_create(&pthread, NULL, &threadFunc, &threadData);
+  pthread_join(pthread,NULL);
   memcpy(data, alignedData, size);
-
-	/*for (int i = 0; i < size; ++i)
-	{
-		if (data[i] > highThreshold)
-		{
-			data[i] = strongEdgeValue;
-		}
-		else if (data[i] < lowThreshold)
-		{
-			data[i] = 0;
-		}
-		else
-		{
-			data[i] = weakEdgeValue;
-		}
-	}*/
 }
 
 void EdgeGenerator::applyHysteresisTracking(int * inData, int width, int height, int strongEdgeValue, int * outData)
