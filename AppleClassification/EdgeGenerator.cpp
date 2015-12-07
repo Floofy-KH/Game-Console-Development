@@ -319,7 +319,20 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 			}
 		}
 	}
+  
+  unsigned int argumentData[16] __attribute__((aligned(128))) =
+  {
+    (unsigned int)guassianResult, (unsigned int)sobelResultX, width, height, (unsigned int)Gx, 3, 
+    0,0,0,0,0,0,0,0,0,0
+  };
+  ThreadData sobelThreadData;
+  sobelThreadData.data = argumentData;
+  sobelThreadData.speExecutable = "SPECode/ApplyKernal";
+  sobelThreadData.runFlags = SPE_RUN_USER_REGS;
 
+  pthread_t sobelThread;
+  pthread_create(&sobelThread, NULL, &threadFunc, &sobelThreadData);
+  pthread_join(sobelThread, NULL);
 	std::cout << "Applying Sobel filters...\n";
 	for (int row = 0; row<height; ++row)
 	{

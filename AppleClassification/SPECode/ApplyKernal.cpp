@@ -1,9 +1,10 @@
 #include <spu_mfcio.h>
 #include <math.h>
+#include <stdio.h>
 
 #define CHUNK_SIZE 64
 #define MAX_SIZE (CHUNK_SIZE*CHUNK_SIZE)
-#define LOGGING 0
+#define LOGGING 1
 
 #define KERNAL_TAG 2
 
@@ -14,9 +15,9 @@
 #endif
 
 //Globals
-unsigned int inDataAddress, ouDataAddress, width, height, kernalAddress, kernalSize, size;
+unsigned int inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize, size;
 mfc_list_element_t getElements[CHUNK_SIZE], putElements[CHUNK_SIZE];
-int inData[MAX_SIZE * 2] __attribute_((aligned(128))), outData[MAX_SIZE * 2] __attribute__((aligned(128)));
+int inData[MAX_SIZE * 2] __attribute__((aligned(128))), outData[MAX_SIZE * 2] __attribute__((aligned(128)));
 float *kernal;
 
 inline bool putChunk(int chunkIndex)
@@ -56,11 +57,11 @@ inline bool putChunk(int chunkIndex)
     for (unsigned int i = 0; i<CHUNK_SIZE; ++i)
     {
       putElements[i].size = CHUNK_SIZE;
-      putElements[i].eal = ouDataAddress + col + (row + i)*width;
+      putElements[i].eal = outDataAddress + col + (row + i)*width;
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_putl(outData, ouDataAddress + bufferPos*MAX_SIZE, putElements, sizeof(putElements), bufferPos, 0, 0);
+    mfc_putl(outData, outDataAddress + bufferPos*MAX_SIZE, putElements, sizeof(putElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -113,18 +114,6 @@ inline bool getChunk(int chunkIndex)
   return validChunk;
 }
 
-inline void processChunk(int bufferPos)
-{
-  for (int row = kernalSize; row < CHUNK_SIZE - kernalSize; ++row)
-  {
-    for (int col = kernalSize; col < CHUNK_SIZE - kernalSize; ++col)
-    {
-      int outIndex = col + row*CHUNK_SIZE;
-      outData[bufferPos*MAX_SIZE + outIndex] = processPixel(col, row);
-    }
-  }
-}
-
 inline int processPixel(int col, int row)
 {
   int kernalExtent = (int)floor(kernalSize / 2.0f);
@@ -143,20 +132,32 @@ inline int processPixel(int col, int row)
   return result;
 }
 
-int main(vector unsigned int arg1, vector unsigned int arg1, vector unsigned int arg1)
+inline void processChunk(int bufferPos)
+{
+  for (int row = kernalSize; row < CHUNK_SIZE - kernalSize; ++row)
+  {
+    for (int col = kernalSize; col < CHUNK_SIZE - kernalSize; ++col)
+    {
+      int outIndex = col + row*CHUNK_SIZE;
+      outData[bufferPos*MAX_SIZE + outIndex] = processPixel(col, row);
+    }
+  }
+}
+
+int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int arg3)
 {
   DPRINTF("Extracting parameters.\n");
-  DataAddress = spu_extract(arg1, 0);
-  ouDataAddress = spu_extract(arg1, 1);
+  inDataAddress = spu_extract(arg1, 0);
+  outDataAddress = spu_extract(arg1, 1);
   width = spu_extract(arg1, 2);
   height = spu_extract(arg1, 2);
   kernalAddress = spu_extract(arg2, 0);
   kernalSize = spu_extract(arg2, 1);
   size = width*height;
-  DPRINTF("In data: %u\nOut data: %u\nWidth: %u\nHeight: %u\nKernal: %u\nKernal size: %u\n", inDatAddress, outDataAddress, width, height, kernalAddress, kernalSize);
+  DPRINTF("In data: %u\nOut data: %u\nWidth: %u\nHeight: %u\nKernal: %u\nKernal size: %u\n", inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize);
 
   mfc_list_element_t getElements[CHUNK_SIZE], putElements[CHUNK_SIZE];
-  int inData[MAX_SIZE*2] __attribute_((aligned(128))), outData[MAX_SIZE*2] __attribute__((aligned(128)));
+  int inData[MAX_SIZE*2] __attribute__((aligned(128))), outData[MAX_SIZE*2] __attribute__((aligned(128)));
   float kernalArray[kernalSize*kernalSize] __attribute__((aligned(128)));
   kernal = kernalArray;
 

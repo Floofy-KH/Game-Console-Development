@@ -1,6 +1,6 @@
 #Target
-PROGRAMS_spu := ApplyThresholding 
-LIBRARY_embed := lib_ApplyThresholding.a
+PROGRAMS_spu := ApplyThresholding ApplyKernal 
+LIBRARY_embed := lib_ApplyThresholding.a lib_ApplyKernal.a
 CC_OPT_LEVEL = -g -O0
 
 #buildutils/make.footer
