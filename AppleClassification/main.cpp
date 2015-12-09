@@ -2,6 +2,7 @@
 #include "ColourAnalyser.h"
 #include "SPEContextManager.h"
 #include <iostream>
+#include <math.h>
 
 float obtainAspectRatio(CImg<int> image)
 {
@@ -50,11 +51,23 @@ float obtainAspectRatio(CImg<int> image)
   return aspectRatio;
 }
 
-struct stuff
+void resizeToPow2(CImg<int>& img)
 {
-  int numbers[31];
-  int sum;
-};
+  bool resizeWidth = (img.width() & (img.width() - 1)) != 0;
+  bool resizeHeight = (img.height() & (img.height() - 1)) != 0;
+  int newWidth = img.width();
+  int newHeight = img.height();
+  if(resizeWidth)
+  {
+    newWidth = pow(2, ceil(log(img.width()) / log(2))); 
+  }
+  if(resizeHeight)
+  {
+    newHeight = pow(2, ceil(log(img.height()) / log(2))); 
+  }
+  
+  img.resize(newWidth, newHeight, img.depth(), img.spectrum(), -1);
+}
 
 int main(int argc, char** argv)
 {
@@ -62,7 +75,9 @@ int main(int argc, char** argv)
 
   std::cout << "Loading images...\n";
   CImg<int> image1 ("apples/Cortland.bmp");
+  resizeToPow2(image1);
   CImg<int> image2 ("apples/Golden Delicious.bmp");
+  resizeToPow2(image2);
 
   std::cout << "Converting images to greyscale...\n";
 	CImg<int> greyscale1 = CImg<int>(image1);
@@ -71,8 +86,8 @@ int main(int argc, char** argv)
   greyscale2.channel(0);
 	edgeData1 = new int[greyscale1.size()];
   edgeData2 = new int[greyscale2.size()];
-	EdgeGenerator::generateEdges(greyscale1.data(), greyscale1.width(), greyscale1.height(), 20, 40, edgeData1);
   EdgeGenerator::generateEdges(greyscale2.data(), greyscale2.width(), greyscale2.height(), 20, 40, edgeData2);
+	EdgeGenerator::generateEdges(greyscale1.data(), greyscale1.width(), greyscale1.height(), 20, 40, edgeData1);
 	
   int EMD = ColourAnalyser::compareImages(image1, image2, edgeData1, edgeData2);
   std::cout << "EMD is: " << EMD << std::endl;

@@ -24,26 +24,17 @@ inline bool putChunk(int chunkIndex)
 {
   bool validChunk = true;
 
-  DPRINTF("Checking chunk index\n", chunkIndex);
   int col = 0, row = 0;
 
   for (int i = 0; i < chunkIndex; ++i)
   {
-    col += chunkIndex*(CHUNK_SIZE - kernalSize);
-    if (col + CHUNK_SIZE > width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
-    {
-      col = width - CHUNK_SIZE;
-    }
-    else if (col + CHUNK_SIZE == width) //If this chunk would end at the width, move to next row;
+    col += CHUNK_SIZE;
+    if (col >= width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
     {
       col = 0;
       row += CHUNK_SIZE;
 
-      if (row + CHUNK_SIZE > height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
-      {
-        row = height - CHUNK_SIZE;
-      }
-      else if (row + CHUNK_SIZE == height)
+      if (row >= height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
       {
         DPRINTF("Chunk %d goes out of range\n", chunkIndex);
         validChunk = false;
@@ -53,15 +44,15 @@ inline bool putChunk(int chunkIndex)
 
   if (validChunk)
   {
-    DPRINTF("Getting %dth data chunk\n", chunkIndex);
+    DPRINTF("Putting %dth data chunk at {%d; %d}\n", chunkIndex, col, row);
     for (unsigned int i = 0; i<CHUNK_SIZE; ++i)
     {
-      putElements[i].size = CHUNK_SIZE;
-      putElements[i].eal = outDataAddress + col + (row + i)*width;
+      putElements[i].size = CHUNK_SIZE*sizeof(int);
+      putElements[i].eal = outDataAddress + (col + (row + i)*width)*sizeof(int);
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_putl(outData, outDataAddress + bufferPos*MAX_SIZE, putElements, sizeof(putElements), bufferPos, 0, 0);
+    mfc_putl(outData + bufferPos*MAX_SIZE, mfc_hl2ea(0, outDataAddress), putElements, sizeof(putElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -71,26 +62,17 @@ inline bool getChunk(int chunkIndex)
 {
   bool validChunk = true;
 
-  DPRINTF("Checking chunk index\n", chunkIndex);
   int col = 0, row = 0;
 
   for (int i = 0; i < chunkIndex; ++i)
   {
-    col += chunkIndex*(CHUNK_SIZE - kernalSize);
-    if (col + CHUNK_SIZE > width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
-    {
-      col = width - CHUNK_SIZE;
-    }
-    else if (col + CHUNK_SIZE == width) //If this chunk would end at the width, move to next row;
+    col += CHUNK_SIZE;
+    if (col>= width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
     {
       col = 0;
       row += CHUNK_SIZE;
 
-      if (row + CHUNK_SIZE > height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
-      {
-        row = height - CHUNK_SIZE;
-      }
-      else if (row + CHUNK_SIZE == height)
+      if (row >= height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
       {
         DPRINTF("Chunk %d goes out of range\n", chunkIndex);
         validChunk = false;
@@ -108,7 +90,7 @@ inline bool getChunk(int chunkIndex)
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_getl(inData, mfc_hl2ea(0, inDataAddress + bufferPos*MAX_SIZE), getElements, sizeof(getElements), bufferPos, 0, 0);
+    mfc_getlb(inData + bufferPos*MAX_SIZE, mfc_hl2ea(0, inDataAddress), getElements, sizeof(getElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -144,15 +126,15 @@ inline void processChunk(int bufferPos)
   }
 }
 
-int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int arg3)
+int main(vector unsigned long long arg1, vector unsigned int arg2, vector unsigned int arg3)
 {
   DPRINTF("Extracting parameters.\n");
   inDataAddress = spu_extract(arg1, 0);
   outDataAddress = spu_extract(arg1, 1);
-  width = spu_extract(arg1, 2);
-  height = spu_extract(arg1, 2);
-  kernalAddress = spu_extract(arg2, 0);
-  kernalSize = spu_extract(arg2, 1);
+  width = spu_extract(arg2, 0);
+  height = spu_extract(arg2, 1);
+  kernalAddress = spu_extract(arg2, 2);
+  kernalSize = spu_extract(arg2, 3);
   size = width*height;
   DPRINTF("In data: %u\nOut data: %u\nWidth: %u\nHeight: %u\nKernal: %u\nKernal size: %u\n", inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize);
 
@@ -161,11 +143,11 @@ int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int
   int kernalPaddedSize = totalKernalSize + (16 - (totalKernalSize%16));
   mfc_get(kernal, kernalAddress, kernalPaddedSize, KERNAL_TAG, 0, 0);
 
-  DPRINTF("Geting first data chunk\n");
+  DPRINTF("Getting first data chunk\n");
   int chunkIndex = 0;
   getChunk(chunkIndex++);
 
-  while (getChunk(chunkIndex++))
+  while (getChunk(chunkIndex))
   {
     int bufferPos = chunkIndex & 1;
 
@@ -173,14 +155,15 @@ int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int
     mfc_write_tag_mask(1 << (1 - bufferPos) | KERNAL_TAG);
     mfc_read_tag_status_all();
 
-    DPRINTF("Proces the %dth chunk\n", chunkIndex - 1);
+    DPRINTF("Process the %dth chunk\n", chunkIndex - 1);
     processChunk(1 - bufferPos);
 
     DPRINTF("Sending processed chunk %d back to main memory\n", chunkIndex - 1);
     putChunk(chunkIndex - 1);
+    chunkIndex++;
   }
 
-  DPRINTF("Wait for last data transfer to complere\n");
+  DPRINTF("Wait for last data transfer to complete\n");
   mfc_write_tag_mask(2);
   mfc_read_tag_status_all();
 
