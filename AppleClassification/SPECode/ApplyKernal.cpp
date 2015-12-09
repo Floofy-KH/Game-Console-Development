@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #define CHUNK_SIZE 64
+#define MOVEMENT 64
 #define MAX_SIZE (CHUNK_SIZE*CHUNK_SIZE)
 #define LOGGING 1
 
@@ -25,14 +26,13 @@ inline bool putChunk(int chunkIndex)
   bool validChunk = true;
 
   int col = 0, row = 0;
-
   for (int i = 0; i < chunkIndex; ++i)
   {
-    col += CHUNK_SIZE;
+    col += MOVEMENT;
     if (col >= width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
     {
       col = 0;
-      row += CHUNK_SIZE;
+      row += MOVEMENT;
 
       if (row >= height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
       {
@@ -48,11 +48,11 @@ inline bool putChunk(int chunkIndex)
     for (unsigned int i = 0; i<CHUNK_SIZE; ++i)
     {
       putElements[i].size = CHUNK_SIZE*sizeof(int);
-      putElements[i].eal = outDataAddress + (col + (row + i)*width)*sizeof(int);
+      putElements[i].eal = mfc_ea2l(outDataAddress) + (col + (row + i)*width)*sizeof(int);
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_putl(outData + bufferPos*MAX_SIZE, mfc_hl2ea(0, outDataAddress), putElements, sizeof(putElements), bufferPos, 0, 0);
+    mfc_putl(outData + bufferPos*MAX_SIZE, outDataAddress, putElements, sizeof(putElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -66,11 +66,11 @@ inline bool getChunk(int chunkIndex)
 
   for (int i = 0; i < chunkIndex; ++i)
   {
-    col += CHUNK_SIZE;
+    col += MOVEMENT;
     if (col>= width) //If this chunk would go beyond the width of the image, partial chunk still needs processed
     {
       col = 0;
-      row += CHUNK_SIZE;
+      row += MOVEMENT;
 
       if (row >= height) //If this chunk would go beyond the width of the image, partial chunk still needs processed
       {
@@ -86,11 +86,11 @@ inline bool getChunk(int chunkIndex)
     for (unsigned int i = 0; i<CHUNK_SIZE; ++i)
     {
       getElements[i].size = CHUNK_SIZE * sizeof(int);
-      getElements[i].eal = inDataAddress + (col + (row + i)*width)*sizeof(int);
+      getElements[i].eal = mfc_ea2l(inDataAddress) + (col + (row + i)*width)*sizeof(int);
     }
 
     int bufferPos = chunkIndex & 1;
-    mfc_getlb(inData + bufferPos*MAX_SIZE, mfc_hl2ea(0, inDataAddress), getElements, sizeof(getElements), bufferPos, 0, 0);
+    mfc_getlb(inData + bufferPos*MAX_SIZE, inDataAddress, getElements, sizeof(getElements), bufferPos, 0, 0);
   }
 
   return validChunk;
@@ -126,17 +126,17 @@ inline void processChunk(int bufferPos)
   }
 }
 
-int main(vector unsigned long long arg1, vector unsigned int arg2, vector unsigned int arg3)
+int main(vector unsigned int arg1, vector unsigned int arg2, vector unsigned int arg3)
 {
   DPRINTF("Extracting parameters.\n");
   inDataAddress = spu_extract(arg1, 0);
   outDataAddress = spu_extract(arg1, 1);
-  width = spu_extract(arg2, 0);
-  height = spu_extract(arg2, 1);
-  kernalAddress = spu_extract(arg2, 2);
-  kernalSize = spu_extract(arg2, 3);
+  width = spu_extract(arg1, 2);
+  height = spu_extract(arg1, 3);
+  kernalAddress = spu_extract(arg2, 0);
+  kernalSize = spu_extract(arg2, 1);
   size = width*height;
-  DPRINTF("In data: %u\nOut data: %u\nWidth: %u\nHeight: %u\nKernal: %u\nKernal size: %u\n", inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize);
+  DPRINTF("In data: %p\nOut data: %p\nWidth: %u\nHeight: %u\nKernal: %p\nKernal size: %u\n", inDataAddress, outDataAddress, width, height, kernalAddress, kernalSize);
 
   DPRINTF("Getting kernal data\n");
   int totalKernalSize = kernalSize*kernalSize;

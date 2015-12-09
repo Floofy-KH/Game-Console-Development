@@ -318,11 +318,9 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
   
     unsigned int argumentData[16] __attribute__((aligned(128))) =
   {
-    (unsigned int)guassianResult, (unsigned int)sobelResultX,0,0, width, height, (unsigned int)Gx, 3, 
-    0,0,0,0,0,0,0,0
+    (unsigned int)guassianResult, (unsigned int)sobelResultX, width, height, (unsigned int)Gx, 3, 
+    0,0,0,0,0,0,0,0,0,0
   };
-  static unsigned long long addresses[2] __attribute__((aligned(128))) = {(unsigned long long)guassianResult, (unsigned long long)sobelResultX};
-  memcpy(argumentData, addresses, sizeof(addresses));
   ThreadData sobelThreadData;
   sobelThreadData.data = argumentData;
   sobelThreadData.speExecutable = "SPECode/ApplyKernal";

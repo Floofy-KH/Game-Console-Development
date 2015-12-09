@@ -86,8 +86,8 @@ int main(int argc, char** argv)
   greyscale2.channel(0);
 	edgeData1 = new int[greyscale1.size()];
   edgeData2 = new int[greyscale2.size()];
-  EdgeGenerator::generateEdges(greyscale2.data(), greyscale2.width(), greyscale2.height(), 20, 40, edgeData2);
 	EdgeGenerator::generateEdges(greyscale1.data(), greyscale1.width(), greyscale1.height(), 20, 40, edgeData1);
+  EdgeGenerator::generateEdges(greyscale2.data(), greyscale2.width(), greyscale2.height(), 20, 40, edgeData2);
 	
   int EMD = ColourAnalyser::compareImages(image1, image2, edgeData1, edgeData2);
   std::cout << "EMD is: " << EMD << std::endl;
