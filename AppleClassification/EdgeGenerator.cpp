@@ -316,21 +316,35 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 		}
 	}
   
-    unsigned int argumentData[16] __attribute__((aligned(128))) =
+	std::cout << "Applying Sobel filters...\n";
+    unsigned int sobelArgumentDataX[16] __attribute__((aligned(128))) =
   {
     (unsigned int)guassianResult, (unsigned int)sobelResultX, width, height, (unsigned int)Gx, 3, 
     0,0,0,0,0,0,0,0,0,0
   };
-  ThreadData sobelThreadData;
-  sobelThreadData.data = argumentData;
-  sobelThreadData.speExecutable = "SPECode/ApplyKernal";
-  sobelThreadData.runFlags = SPE_RUN_USER_REGS;
+    unsigned int sobelArgumentDataY[16] __attribute__((aligned(128))) =
+  {
+    (unsigned int)guassianResult, (unsigned int)sobelResultY, width, height, (unsigned int)Gy, 3, 
+    0,0,0,0,0,0,0,0,0,0
+  };
+  ThreadData sobelXThreadData, sobelYThreadData;
+  sobelXThreadData.data = sobelArgumentDataX;
+  sobelXThreadData.speExecutable = "SPECode/ApplyKernal";
+  sobelXThreadData.runFlags = SPE_RUN_USER_REGS;
+  sobelYThreadData.data = sobelArgumentDataY;
+  sobelYThreadData.speExecutable = "SPECode/ApplyKernal";
+  sobelYThreadData.runFlags = SPE_RUN_USER_REGS;
 
-  pthread_t sobelThread;
-  pthread_create(&sobelThread, NULL, &threadFunc, &sobelThreadData);
-  pthread_join(sobelThread, NULL);
-	std::cout << "Applying Sobel filters...\n";
-	for (int row = 0; row<height; ++row)
+  pthread_t sobelThreadX, sobelThreadY;
+  pthread_create(&sobelThreadX, NULL, &threadFunc, &sobelYThreadData);
+  pthread_create(&sobelThreadY, NULL, &threadFunc, &sobelXThreadData);
+  pthread_join(sobelThreadX, NULL);
+  pthread_join(sobelThreadY, NULL);
+  for(int i=0; i<imageSize; ++i)
+  {
+	  sobelResult[i] = (int)sqrt(sobelResultX[i] * sobelResultX[i] + sobelResultY[i] * sobelResultY[i]);
+  }
+	/*for (int row = 0; row<height; ++row)
 	{
 		for (int col = 0; col<width; ++col)
 		{
@@ -339,7 +353,7 @@ void EdgeGenerator::generateEdges(int * inData, int width, int height, int lowTh
 			int index = col + row*width;
 			sobelResult[index] = (int)sqrt(sobelResultX[index] * sobelResultX[index] + sobelResultY[index] * sobelResultY[index]);
 		}
-	}
+	}*/
 
 	std::cout << "Calculating edge directions...\n";
 	calculateEdgeDirections((int*)sobelResultX, (int*)sobelResultY, (float*)directions, imageSize);
