@@ -2,7 +2,16 @@
 #include "ColourAnalyser.h"
 #include "SPEContextManager.h"
 #include <iostream>
+#include <pthread.h>
 #include <math.h>
+
+struct ThreadData
+{
+  int *edgeData;
+  CImg<int> *image;
+  const char *fileName;
+};
+
 
 float obtainAspectRatio(CImg<int> image)
 {
@@ -51,45 +60,60 @@ float obtainAspectRatio(CImg<int> image)
   return aspectRatio;
 }
 
-void resizeToPow2(CImg<int>& img)
+void resizeToPow2(CImg<int> *img)
 {
-  bool resizeWidth = (img.width() & (img.width() - 1)) != 0;
-  bool resizeHeight = (img.height() & (img.height() - 1)) != 0;
-  int newWidth = img.width();
-  int newHeight = img.height();
+  bool resizeWidth = (img->width() & (img->width() - 1)) != 0;
+  bool resizeHeight = (img->height() & (img->height() - 1)) != 0;
+  int newWidth = img->width();
+  int newHeight = img->height();
   if(resizeWidth)
   {
-    newWidth = pow(2, ceil(log(img.width()) / log(2))); 
+    newWidth = pow(2, ceil(log(img->width()) / log(2))); 
   }
   if(resizeHeight)
   {
-    newHeight = pow(2, ceil(log(img.height()) / log(2))); 
+    newHeight = pow(2, ceil(log(img->height()) / log(2))); 
   }
   
-  img.resize(newWidth, newHeight, img.depth(), img.spectrum(), -1);
+  img->resize(newWidth, newHeight, img->depth(), img->spectrum(), -1);
+}
+
+void* mainThreadFunc(void *data)
+{
+  ThreadData *threadData = (ThreadData*)data;
+  int *edgeData = threadData->edgeData;
+  CImg<int> *image = threadData->image;
+
+  std::cout << "Loading imags...\n";
+  image = new CImg<int> (threadData->fileName);
+  resizeToPow2(image);
+
+  std::cout << "Converting image to greyscale...\n";
+	CImg<int> greyscale = CImg<int>(*image);
+	greyscale.channel(0);
+	edgeData = new int[greyscale.size()];
+	EdgeGenerator::generateEdges(greyscale.data(), greyscale.width(), greyscale.height(), 20, 40, edgeData);
 }
 
 int main(int argc, char** argv)
 {
+  ThreadData data1, data2;
   int *edgeData1 = NULL, *edgeData2 = NULL;
+  CImg<int> *image1, *image2;
+  data1.edgeData = edgeData1;
+  data1.image = image1;
+  data1.fileName = "apples/Gala.bmp";
+  data2.edgeData = edgeData2;
+  data2.image = image2;
+  data2.fileName = "apples/Jonathan.bmp";
 
-  std::cout << "Loading images...\n";
-  CImg<int> image1 ("apples/Cortland.bmp");
-  resizeToPow2(image1);
-  CImg<int> image2 ("apples/Golden Delicious.bmp");
-  resizeToPow2(image2);
+  pthread_t thread1, thread2;
+  pthread_create(&thread1, NULL, &mainThreadFunc, &data1);
+  pthread_create(&thread2, NULL, &mainThreadFunc, &data2);
+  pthread_join(thread1, NULL);
+  pthread_join(thread2, NULL);
 
-  std::cout << "Converting images to greyscale...\n";
-	CImg<int> greyscale1 = CImg<int>(image1);
-  CImg<int> greyscale2 = CImg<int>(image2);
-	greyscale1.channel(0);
-  greyscale2.channel(0);
-	edgeData1 = new int[greyscale1.size()];
-  edgeData2 = new int[greyscale2.size()];
-	EdgeGenerator::generateEdges(greyscale1.data(), greyscale1.width(), greyscale1.height(), 20, 40, edgeData1);
-  EdgeGenerator::generateEdges(greyscale2.data(), greyscale2.width(), greyscale2.height(), 20, 40, edgeData2);
-	
-  int EMD = ColourAnalyser::compareImages(image1, image2, edgeData1, edgeData2);
+  int EMD = ColourAnalyser::compareImages(*image1, *image2, edgeData1, edgeData2);
   std::cout << "EMD is: " << EMD << std::endl;
 
 	std::cout << "Press any key to continue" << std::endl;

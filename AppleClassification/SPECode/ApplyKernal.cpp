@@ -5,7 +5,7 @@
 #define CHUNK_SIZE 64
 #define MOVEMENT 64
 #define MAX_SIZE (CHUNK_SIZE*CHUNK_SIZE)
-#define LOGGING 1
+#define LOGGING 0
 
 #define KERNAL_TAG 2
 
